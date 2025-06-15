@@ -1,24 +1,74 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Copy, Check } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+
+type ScriptFunction = {
+  name: string;
+  status: string;
+};
+
+type Script = {
+  id: string;
+  game_name: string;
+  description: string | null;
+  functions: ScriptFunction[] | null;
+  script_body: string;
+  status: string;
+};
 
 const Scripts = () => {
   const { toast } = useToast();
   const [copiedScript, setCopiedScript] = useState<string | null>(null);
+  const [scripts, setScripts] = useState<Script[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const scripts = [
-    {
-      gameName: "Steal a Brianrot",
-      functions: [
-        { name: "Anti Cheat Bypass", status: "🟢" },
-        { name: "Insta Steal", status: "🟢" }
-      ],
-      script: 'loadstring(game:HttpGet("https://raw.githubusercontent.com/Youifpg/Steal-a-Brianrot/refs/heads/main/InstaSteal.lua"))()'
-    }
-  ];
+  useEffect(() => {
+    const fetchScripts = async () => {
+      const { data, error } = await supabase
+        .from('scripts')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        toast({
+          title: "Error loading scripts",
+          description: error.message,
+          variant: "destructive",
+        });
+        setScripts([]);
+      } else {
+        setScripts(data as Script[]);
+      }
+      setLoading(false);
+    };
+
+    fetchScripts();
+
+    const channel = supabase
+      .channel('realtime-scripts')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'scripts',
+        },
+        () => {
+          // Simple refetch to get the latest data
+          fetchScripts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [toast]);
 
   const copyToClipboard = async (script: string, gameName: string) => {
     try {
@@ -55,32 +105,44 @@ const Scripts = () => {
 
         {/* Scripts Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {scripts.map((script, index) => (
+          {loading ? (
+             <div className="col-span-full text-center py-10 text-gray-400">Loading scripts...</div>
+          ) : scripts.map((script, index) => (
             <Card 
-              key={script.gameName} 
+              key={script.id} 
               className="bg-gray-800/50 border-gray-700 hover:border-cyan-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10 animate-scale-in group"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               <CardHeader>
-                <CardTitle className="text-white text-xl group-hover:text-cyan-400 transition-colors duration-300">
-                  {script.gameName}
-                </CardTitle>
+                <div className="flex justify-between items-center mb-2">
+                    <CardTitle className="text-white text-xl group-hover:text-cyan-400 transition-colors duration-300">
+                      {script.game_name}
+                    </CardTitle>
+                    <Badge
+                        variant={script.status === 'Working' ? 'default' : 'destructive'}
+                        className={script.status === 'Working' ? 'bg-green-500 hover:bg-green-500/90 border-transparent text-primary-foreground' : 'bg-red-500 hover:bg-red-500/90 border-transparent text-destructive-foreground'}
+                    >
+                        {script.status === 'Working' ? '✅ Working' : '❌ Patched'}
+                    </Badge>
+                </div>
                 <CardDescription className="text-gray-400">
-                  Premium Script Collection
+                  {script.description}
                 </CardDescription>
               </CardHeader>
               
               <CardContent className="space-y-4">
                 {/* Functions List */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-semibold text-cyan-400 mb-2">Functions:</h4>
-                  {script.functions.map((func, funcIndex) => (
-                    <div key={funcIndex} className="flex items-center justify-between text-sm">
-                      <span className="text-gray-300">{func.name}</span>
-                      <span className="text-lg">{func.status}</span>
+                {script.functions && script.functions.length > 0 ? (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-semibold text-cyan-400 mb-2">Functions:</h4>
+                      {script.functions.map((func, funcIndex) => (
+                        <div key={funcIndex} className="flex items-center justify-between text-sm">
+                          <span className="text-gray-300">{func.name}</span>
+                          <span className="text-lg">{func.status}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                ) : null}
 
                 {/* Script Code */}
                 <div className="bg-gray-900/70 p-3 rounded-lg border border-gray-700">
@@ -90,9 +152,9 @@ const Scripts = () => {
                       size="sm"
                       variant="ghost"
                       className="h-6 w-6 p-0 text-gray-400 hover:text-cyan-400"
-                      onClick={() => copyToClipboard(script.script, script.gameName)}
+                      onClick={() => copyToClipboard(script.script_body, script.game_name)}
                     >
-                      {copiedScript === script.script ? (
+                      {copiedScript === script.script_body ? (
                         <Check size={14} className="text-green-400" />
                       ) : (
                         <Copy size={14} />
@@ -100,16 +162,16 @@ const Scripts = () => {
                     </Button>
                   </div>
                   <code className="text-xs text-gray-300 font-mono break-all leading-relaxed">
-                    {script.script}
+                    {script.script_body}
                   </code>
                 </div>
 
                 {/* Copy Button */}
                 <Button
                   className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white transition-all duration-300 hover:scale-105"
-                  onClick={() => copyToClipboard(script.script, script.gameName)}
+                  onClick={() => copyToClipboard(script.script_body, script.game_name)}
                 >
-                  {copiedScript === script.script ? (
+                  {copiedScript === script.script_body ? (
                     <>
                       <Check size={16} className="mr-2" />
                       Copied!
