@@ -13,8 +13,12 @@ const Hero = () => {
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
         {/* Floating Logo */}
         <div className="mb-8 animate-float">
-          <div className="w-24 h-24 mx-auto bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full flex items-center justify-center shadow-lg shadow-cyan-500/25">
-            <span className="text-white font-bold text-3xl">AH</span>
+          <div className="w-24 h-24 mx-auto rounded-full flex items-center justify-center shadow-lg shadow-cyan-500/25">
+            <img 
+              src="https://cdn.discordapp.com/icons/1382347306048684155/af7819127f735f42de82b37d5631d195.png?size=80&quality=lossless" 
+              alt="ARBIX HUB Logo" 
+              className="w-24 h-24 rounded-full"
+            />
           </div>
         </div>
 

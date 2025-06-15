@@ -17,9 +17,11 @@ const Header = () => {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">AH</span>
-            </div>
+            <img 
+              src="https://cdn.discordapp.com/icons/1382347306048684155/af7819127f735f42de82b37d5631d195.png?size=80&quality=lossless" 
+              alt="ARBIX HUB Logo" 
+              className="w-10 h-10 rounded-lg"
+            />
             <span className="text-white font-bold text-xl">ARBIX HUB</span>
           </div>
 

@@ -8,19 +8,22 @@ const Credits = () => {
       role: "Owner",
       name: "wv61",
       icon: Crown,
-      color: "from-yellow-400 to-orange-500"
+      color: "from-yellow-400 to-orange-500",
+      avatar: "https://cdn.discordapp.com/avatars/1216727781505765460/78328b94bc85f3ecc2d125eb1d95562b.webp?size=512"
     },
     {
       role: "Website Developer",
       name: "Elmejorsiuuu",
       icon: Code,
-      color: "from-cyan-400 to-blue-500"
+      color: "from-cyan-400 to-blue-500",
+      avatar: "https://cdn.discordapp.com/avatars/697962992041459756/6617a18545274c53c2fefc82cb827e40?size=1024"
     },
     {
       role: "Staff",
       name: "chase_lool3004",
       icon: Shield,
-      color: "from-purple-400 to-pink-500"
+      color: "from-purple-400 to-pink-500",
+      avatar: "https://cdn.discordapp.com/avatars/1217090542522077236/f54060f983e5da60c5b61737196d2e14?size=1024"
     }
   ];
 
@@ -50,9 +53,16 @@ const Credits = () => {
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <CardContent className="p-6 text-center">
-                  {/* Icon */}
-                  <div className={`w-16 h-16 mx-auto mb-4 bg-gradient-to-r ${member.color} rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                    <IconComponent className="w-8 h-8 text-white" />
+                  {/* Profile Picture */}
+                  <div className="w-20 h-20 mx-auto mb-4 relative">
+                    <img 
+                      src={member.avatar} 
+                      alt={`${member.name} profile`}
+                      className="w-20 h-20 rounded-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
+                    <div className={`absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-r ${member.color} rounded-full flex items-center justify-center`}>
+                      <IconComponent className="w-4 h-4 text-white" />
+                    </div>
                   </div>
 
                   {/* Role */}
