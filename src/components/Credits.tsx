@@ -40,10 +40,9 @@ const Credits = () => {
     const visitorId = getOrCreateVisitorId();
 
     // Call the increment view function
-    // Note: rpc throws if function returns nothing, but stats are updated regardless
     supabase.rpc('increment_view_count', { visitor_uuid: visitorId });
 
-    // Fetch stats
+    // Helper function to fetch stats from database
     const fetchStats = async () => {
       const { data, error } = await supabase
         .from('website_stats')
@@ -51,14 +50,39 @@ const Credits = () => {
         .limit(1)
         .maybeSingle();
       if (error) {
-        // fallback, just don't show stats
         setLoadingStats(false);
         return;
       }
       setViewStats(data);
       setLoadingStats(false);
     };
+
     fetchStats();
+
+    // --- Realtime subscription for live updates ---
+    const channel = supabase
+      .channel('realtime-website-stats')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'website_stats'
+        },
+        (payload) => {
+          if (payload.new) {
+            setViewStats({
+              total_views: payload.new.total_views,
+              unique_visitors: payload.new.unique_visitors,
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return (
@@ -148,3 +172,4 @@ const Credits = () => {
 };
 
 export default Credits;
+
