@@ -42,7 +42,7 @@ const Scripts = () => {
         });
         setScripts([]);
       } else {
-        setScripts(data as Script[]);
+        setScripts(data as unknown as Script[]);
       }
       setLoading(false);
     };
