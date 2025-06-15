@@ -35,29 +35,38 @@ const Credits = () => {
   const [viewStats, setViewStats] = useState<{total_views: number; unique_visitors: number;} | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
 
+  // Helper function to fetch stats from database
+  const fetchStats = async () => {
+    const { data, error } = await supabase
+      .from('website_stats')
+      .select('total_views, unique_visitors')
+      .limit(1)
+      .maybeSingle();
+    if (error) {
+      console.error("Error fetching website stats:", error);
+      setLoadingStats(false);
+      return;
+    }
+    setViewStats(data);
+    setLoadingStats(false);
+  };
+
   // Track view and fetch stats
   useEffect(() => {
     const visitorId = getOrCreateVisitorId();
 
-    // Call the increment view function
-    supabase.rpc('increment_view_count', { visitor_uuid: visitorId });
-
-    // Helper function to fetch stats from database
-    const fetchStats = async () => {
-      const { data, error } = await supabase
-        .from('website_stats')
-        .select('total_views, unique_visitors')
-        .limit(1)
-        .maybeSingle();
-      if (error) {
-        setLoadingStats(false);
-        return;
+    const incrementAndFetch = async () => {
+      setLoadingStats(true);
+      // Await the result of the RPC call and log error if it occurs
+      const { error: rpcError } = await supabase.rpc('increment_view_count', { visitor_uuid: visitorId });
+      if (rpcError) {
+        console.error("Error incrementing view count:", rpcError);
       }
-      setViewStats(data);
-      setLoadingStats(false);
+      // Fetch the stats again, so UI is up-to-date
+      await fetchStats();
     };
 
-    fetchStats();
+    incrementAndFetch();
 
     // --- Realtime subscription for live updates ---
     const channel = supabase
@@ -172,4 +181,3 @@ const Credits = () => {
 };
 
 export default Credits;
-
