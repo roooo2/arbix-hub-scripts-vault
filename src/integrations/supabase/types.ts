@@ -9,13 +9,63 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      website_stats: {
+        Row: {
+          id: string
+          last_updated: string
+          total_views: number
+          unique_visitors: number
+        }
+        Insert: {
+          id?: string
+          last_updated?: string
+          total_views?: number
+          unique_visitors?: number
+        }
+        Update: {
+          id?: string
+          last_updated?: string
+          total_views?: number
+          unique_visitors?: number
+        }
+        Relationships: []
+      }
+      website_views: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          page_path: string
+          user_agent: string | null
+          visitor_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          page_path?: string
+          user_agent?: string | null
+          visitor_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          page_path?: string
+          user_agent?: string | null
+          visitor_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_view_count: {
+        Args: { visitor_uuid: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

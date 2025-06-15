@@ -1,6 +1,18 @@
 
 import { Card, CardContent } from '@/components/ui/card';
-import { Crown, Code, Shield } from 'lucide-react';
+import { Crown, Code } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+
+// Generate a UUID (for visitor tracking)
+function getOrCreateVisitorId() {
+  let id = localStorage.getItem('arbixhub-visitor-id');
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem('arbixhub-visitor-id', id);
+  }
+  return id;
+}
 
 const Credits = () => {
   const team = [
@@ -17,15 +29,37 @@ const Credits = () => {
       icon: Code,
       color: "from-cyan-400 to-blue-500",
       avatar: "https://cdn.discordapp.com/avatars/697962992041459756/6617a18545274c53c2fefc82cb827e40?size=1024"
-    },
-    {
-      role: "Staff",
-      name: "chase_lool3004",
-      icon: Shield,
-      color: "from-purple-400 to-pink-500",
-      avatar: "https://cdn.discordapp.com/avatars/1217090542522077236/f54060f983e5da60c5b61737196d2e14?size=1024"
     }
   ];
+
+  const [viewStats, setViewStats] = useState<{total_views: number; unique_visitors: number;} | null>(null);
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  // Track view and fetch stats
+  useEffect(() => {
+    const visitorId = getOrCreateVisitorId();
+
+    // Call the increment view function
+    // Note: rpc throws if function returns nothing, but stats are updated regardless
+    supabase.rpc('increment_view_count', { visitor_uuid: visitorId });
+
+    // Fetch stats
+    const fetchStats = async () => {
+      const { data, error } = await supabase
+        .from('website_stats')
+        .select('total_views, unique_visitors')
+        .limit(1)
+        .maybeSingle();
+      if (error) {
+        // fallback, just don't show stats
+        setLoadingStats(false);
+        return;
+      }
+      setViewStats(data);
+      setLoadingStats(false);
+    };
+    fetchStats();
+  }, []);
 
   return (
     <section id="credits" className="py-20 px-4 bg-gray-950">
@@ -43,7 +77,7 @@ const Credits = () => {
         </div>
 
         {/* Team Grid */}
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 gap-8">
           {team.map((member, index) => {
             const IconComponent = member.icon;
             return (
@@ -78,6 +112,24 @@ const Credits = () => {
               </Card>
             );
           })}
+        </div>
+
+        {/* Views Counter */}
+        <div className="flex flex-col items-center mt-14">
+          <div className="bg-gradient-to-r from-cyan-700/30 to-purple-700/30 border border-cyan-500/20 rounded-xl px-7 py-4 flex flex-col gap-2 shadow animate-fade-in-up" style={{animationDelay: '0.30s'}}>
+            <div className="flex justify-center items-center gap-4 text-center text-white">
+              <span className="font-bold text-xl">
+                👁️&nbsp;{loadingStats ? '...' : viewStats?.total_views ?? '--'}
+              </span>
+              <span className="text-gray-400 text-base">Total visits</span>
+            </div>
+            <div className="flex justify-center items-center gap-4 text-center text-white">
+              <span className="font-bold text-xl">
+                🎉&nbsp;{loadingStats ? '...' : viewStats?.unique_visitors ?? '--'}
+              </span>
+              <span className="text-gray-400 text-base">Unique visitors</span>
+            </div>
+          </div>
         </div>
 
         {/* Thank You Message */}
