@@ -31,78 +31,32 @@ const PremiumCodeInput = ({ onPremiumStatusChange, isPremium }: PremiumCodeInput
     setLoading(true);
 
     try {
-      // Check if code exists and is unused
-      const { data: codeData, error: codeError } = await supabase
-        .from('premium_codes')
-        .select('*')
-        .eq('code', code.trim().toUpperCase())
-        .eq('is_used', false)
-        .single();
-
-      if (codeError || !codeData) {
-        toast({
-          title: "Invalid Code",
-          description: "This premium code is invalid or has already been used",
-          variant: "destructive",
-        });
-        setLoading(false);
-        return;
-      }
-
       // Get or create user ID (for demo purposes, using a simple identifier)
       const userId = localStorage.getItem('user_id') || `user_${Date.now()}`;
       localStorage.setItem('user_id', userId);
 
-      // Check if user already has premium
-      const { data: userStatus } = await supabase
-        .from('user_premium_status')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
+      // Call secure edge function to validate premium code
+      const { data, error } = await supabase.functions.invoke('validate-premium-code', {
+        body: {
+          code: code.trim(),
+          userId: userId
+        }
+      });
 
-      if (userStatus?.is_premium) {
-        toast({
-          title: "Already Premium",
-          description: "You already have premium access!",
-        });
-        setLoading(false);
-        return;
-      }
-
-      // Mark code as used
-      const { error: updateCodeError } = await supabase
-        .from('premium_codes')
-        .update({
-          is_used: true,
-          used_by: userId,
-          used_at: new Date().toISOString()
-        })
-        .eq('code', code.trim().toUpperCase());
-
-      if (updateCodeError) {
+      if (error) {
         toast({
           title: "Error",
-          description: "Failed to activate premium code",
+          description: error.message || "Failed to validate premium code",
           variant: "destructive",
         });
         setLoading(false);
         return;
       }
 
-      // Update or create user premium status
-      const { error: statusError } = await supabase
-        .from('user_premium_status')
-        .upsert({
-          user_id: userId,
-          is_premium: true,
-          premium_code_used: code.trim().toUpperCase(),
-          activated_at: new Date().toISOString()
-        });
-
-      if (statusError) {
+      if (data.error) {
         toast({
-          title: "Error",
-          description: "Failed to activate premium status",
+          title: "Invalid Code",
+          description: data.error,
           variant: "destructive",
         });
         setLoading(false);
@@ -159,7 +113,7 @@ const PremiumCodeInput = ({ onPremiumStatusChange, isPremium }: PremiumCodeInput
       <CardContent className="space-y-4">
         <div className="flex space-x-2">
           <Input
-            placeholder="Enter premium code (e.g., SECRET-ALPHA-001)"
+            placeholder="Enter premium code"
             value={code}
             onChange={(e) => setCode(e.target.value)}
             className="bg-gray-900/70 border-gray-600 text-white placeholder-gray-500"

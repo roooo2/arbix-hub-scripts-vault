@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -35,15 +34,16 @@ const Scripts = () => {
     const checkPremiumStatus = async () => {
       const userId = localStorage.getItem('user_id');
       if (userId) {
-        const { data: userStatus } = await supabase
-          .from('user_premium_status')
-          .select('*')
-          .eq('user_id', userId)
-          .eq('is_premium', true)
-          .single();
+        try {
+          const { data, error } = await supabase.functions.invoke('check-premium-status', {
+            body: { userId }
+          });
 
-        if (userStatus) {
-          setIsPremium(true);
+          if (!error && data?.isPremium) {
+            setIsPremium(true);
+          }
+        } catch (error) {
+          console.error('Error checking premium status:', error);
         }
       }
     };
