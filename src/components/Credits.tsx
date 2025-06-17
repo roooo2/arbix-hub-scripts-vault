@@ -1,6 +1,5 @@
-
 import { Card, CardContent } from '@/components/ui/card';
-import { Crown, Code } from 'lucide-react';
+import { Crown, Code, Wrench } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -22,6 +21,13 @@ const Credits = () => {
       icon: Crown,
       color: "from-yellow-400 to-orange-500",
       avatar: "https://cdn.discordapp.com/avatars/1216727781505765460/78328b94bc85f3ecc2d125eb1d95562b.webp?size=512"
+    },
+    {
+      role: "Developer",
+      name: "zkai8211",
+      icon: Wrench,
+      color: "from-green-400 to-emerald-500",
+      avatar: "https://cdn.discordapp.com/avatars/1006078382661971988/8764f2da7f25a5913ad8f2afbca306d2.webp?size=512"
     },
     {
       role: "Website Developer",
@@ -110,7 +116,7 @@ const Credits = () => {
         </div>
 
         {/* Team Grid */}
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-3 gap-8">
           {team.map((member, index) => {
             const IconComponent = member.icon;
             return (
