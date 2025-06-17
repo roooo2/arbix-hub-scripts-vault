@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      premium_codes: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          is_used: boolean
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          is_used?: boolean
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          is_used?: boolean
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: []
+      }
       scripts: {
         Row: {
           created_at: string
@@ -16,6 +43,7 @@ export type Database = {
           functions: Json | null
           game_name: string
           id: string
+          is_premium: boolean
           script_body: string
           status: string
         }
@@ -25,6 +53,7 @@ export type Database = {
           functions?: Json | null
           game_name: string
           id?: string
+          is_premium?: boolean
           script_body: string
           status?: string
         }
@@ -34,8 +63,36 @@ export type Database = {
           functions?: Json | null
           game_name?: string
           id?: string
+          is_premium?: boolean
           script_body?: string
           status?: string
+        }
+        Relationships: []
+      }
+      user_premium_status: {
+        Row: {
+          activated_at: string | null
+          created_at: string
+          id: string
+          is_premium: boolean
+          premium_code_used: string | null
+          user_id: string
+        }
+        Insert: {
+          activated_at?: string | null
+          created_at?: string
+          id?: string
+          is_premium?: boolean
+          premium_code_used?: string | null
+          user_id: string
+        }
+        Update: {
+          activated_at?: string | null
+          created_at?: string
+          id?: string
+          is_premium?: boolean
+          premium_code_used?: string | null
+          user_id?: string
         }
         Relationships: []
       }
